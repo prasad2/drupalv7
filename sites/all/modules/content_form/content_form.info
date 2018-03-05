@@ -1,0 +1,7 @@
+name = "Content Form"
+
+description = "Content form to show admin form"
+
+core = "7.x"
+
+configure = admin/config/content_from

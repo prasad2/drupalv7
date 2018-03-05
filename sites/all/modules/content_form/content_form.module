@@ -1,0 +1,168 @@
+<?php
+
+/**
+*	@file
+*	content_form.module
+*/
+
+/**
+*	Implement hook_permission
+*/
+
+function content_form_permission() {
+  return array(
+    'administer content_form' => array(
+      'title' => t('administer content form'),
+      'description' => t('Perform administration tasks for content_form'),
+    ),
+  );
+}
+
+/**
+*	Implement hook_menu
+*/
+
+function content_form_menu() {
+
+  $items['admin/config/content_form'] = array(
+  'title' => 'Content Form settings',
+  'type' => MENU_NORMAL_ITEM,
+  'page callback' =>'drupal_get_form',
+  'page arguments' => array('content_form_admin_form'),
+  'access arguments' => array('administer content_form'),
+	);
+
+  return $items;
+}
+
+/**
+*	My Call back form function
+*/
+
+function content_form_admin_form($form, &$form_state)
+{
+
+	$form['content_form_path'] = array(
+
+		  '#type' => 'textfield', 
+		  '#title' => t('Path'), 
+		  '#default_value' => variable_get('content_form_path',''), 
+		  '#size' => 60, 
+		  '#maxlength' => 256, 
+		  '#required' => TRUE,
+		);
+
+	// Get the list of options to populate the first dropdown.
+  	$options_first = _ajax_example_get_first_dropdown_options();
+
+  	$selected = isset($form_state['values']['content_form_dropdown1']) ? $form_state['values']['content_form_dropdown1'] : key($options_first);
+
+	$form['content_form_dropdown1'] = array(
+       '#type' => 'select',
+       '#title' => t('Content type'),
+       '#options' => $options_first,
+       '#default_value' => $selected,
+       '#description' => t('Select first dropdown value'),
+       '#ajax' => array(
+	      // When 'event' occurs, Drupal will perform an ajax request in the
+	      // background. Usually the default value is sufficient (eg. change for
+	      // select elements), but valid values include any jQuery event,
+	      // most notably 'mousedown', 'blur', and 'submit'.
+	      // 'event' => 'change',
+      		'callback' => 'ajax_example_dependent_dropdown_callback',
+      		'wrapper' => 'dropdown-second-replace',
+    	),
+   );
+
+
+	$form['content_form_dropdown2'] = array(
+	    '#type' => 'select',
+	    '#title' => $options_first[$selected] . ' ' . t('Content Type'),
+	    // The entire enclosing div created here gets replaced when dropdown_first
+	    // is changed.
+	    '#prefix' => '<div id="dropdown-second-replace">',
+	    '#suffix' => '</div>',
+	    // When the form is rebuilt during ajax processing, the $selected variable
+	    // will now have the new value and so the options will change.
+	    '#options' => _ajax_example_get_second_dropdown_options($selected),
+	    '#default_value' => isset($form_state['values']['content_form_dropdown2']) ? $form_state['values']['content_form_dropdown2'] : '',
+  	);
+
+
+	$form['content_form_submit'] = array(
+		'#type' => 'submit', 
+		'#value' => t('Submit')
+	);
+
+	return $form;
+}
+
+/**
+ * Submit Handler
+ */
+
+
+function content_form_admin_form_submit($form, &$form_state) {
+  
+ 	$path = $form_state['values']['content_form_path'];
+
+  drupal_set_message(t('The form has been submitted.'));
+
+  drupal_goto($path);
+
+}
+
+/**
+ * Validates the form.
+ */
+function content_form_admin_form_validate($form, &$form_state) {
+
+  $val = $form_state['values']['content_form_dropdown1'];
+
+  if (empty($val)) 
+  {
+    form_set_error('content_form_dropdown1', t('Enter a content type'));
+  }
+
+  $val2 = $form_state['values']['content_form_dropdown2'];
+
+  if (empty($val2)) 
+  {
+    form_set_error('content_form_dropdown2', t('Enter a dependent content type'));
+  }
+}
+
+function ajax_example_dependent_dropdown_callback($form, $form_state) {
+  return $form['content_form_dropdown2'];
+}
+
+function _ajax_example_get_first_dropdown_options() {
+
+	
+  // drupal_map_assoc() just makes an array('String' => 'String'...).
+  // return drupal_map_assoc(array(
+  //   t('String'),
+  //   t('Woodwind'),
+  //   t('Brass'),
+  //   t('Percussion'),
+  // ));
+
+	return array_keys(node_type_get_types());
+}
+
+
+function _ajax_example_get_second_dropdown_options($key = '') {
+  // $options = array(
+  // );
+
+	$temp =  array_values(node_type_get_types());
+
+	$options = (array) $temp;
+
+  if (isset($options[$key])) {
+    return $options[$key];
+  }
+  else {
+    return array();
+  }
+}

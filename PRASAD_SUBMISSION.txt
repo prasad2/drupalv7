@@ -1,0 +1,9 @@
+1) Created a custom module ===> Content_form
+
+2) Create an admin form ===> can be accessed at ~/admin/config/content_form
+
+3) Created path , dropdown , dependent dropdown.
+
+4) Validated if dependent dropdown is updated based on primary dropdown.
+
+5) Validated the form and redirected it to value in Path
